@@ -1,15 +1,15 @@
 library flutter_svg_provider;
 
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui' as ui show Image, Picture;
 
-import 'package:flutter/widgets.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/widgets.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
 
 /// An [Enum] of the possible image path sources.
 enum SvgSource {
@@ -46,6 +46,9 @@ class Svg extends ImageProvider<SvgImageKey> {
   /// Image scale.
   final double? scale;
 
+  /// The name of the package from which the image is included.
+  final String? package;
+
   /// Width and height can also be specified from [Image] constrictor.
   /// Default size is 100x100 logical pixels.
   /// Different size can be specified in [Image] parameters
@@ -55,7 +58,12 @@ class Svg extends ImageProvider<SvgImageKey> {
     this.scale,
     this.color,
     this.source = SvgSource.asset,
+    this.package,
   });
+
+  String get keyName => source == SvgSource.asset && package != null
+      ? 'packages/$package/$path'
+      : path;
 
   @override
   Future<SvgImageKey> obtainKey(ImageConfiguration configuration) {
@@ -66,7 +74,7 @@ class Svg extends ImageProvider<SvgImageKey> {
 
     return SynchronousFuture<SvgImageKey>(
       SvgImageKey(
-        path: path,
+        path: keyName,
         scale: scale,
         color: color,
         source: source,
@@ -122,7 +130,7 @@ class Svg extends ImageProvider<SvgImageKey> {
   // [SvgImageKey] instances will be compared instead.
   @override
   String toString() => '$runtimeType(${describeIdentity(path)})';
-  
+
   // Running on web with Colors.transparent may throws the exception `Expected a value of type 'SkDeletable', but got one of type 'Null'`.
   static Color getFilterColor(color) {
     if (kIsWeb && color == Colors.transparent) {
